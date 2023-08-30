@@ -2,6 +2,13 @@ const TOKEN = Deno.env.get("TG_BOT_TOKEN");
 const TG_CHANNEL_ID = Deno.env.get("TG_CHANNEL_ID");
 const DOMAIN = Deno.env.get("DOMAIN");
 const API_KEY = Deno.env.get("API_KEY");
+
+const SUPPORTED_REGIONS = ["us-central","europe-west"];
+var SUPPORTED_REGIONS_TG_CHANNEL_ID = {} as any;
+SUPPORTED_REGIONS.forEach(region => {
+  SUPPORTED_REGIONS_TG_CHANNEL_ID[region] = Deno.env.get("TG_CHANNEL_ID_" + region);
+});
+
 export const webhookPath = "/tg-webhook";
 
 function genRandomToken(bytes: number) {
@@ -62,6 +69,18 @@ async function poll() {
             text: `[${reg}] Time to BeReal!`,
           }),
         });
+        if(SUPPORTED_REGIONS_TG_CHANNEL_ID[reg]) {
+          await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              chat_id: SUPPORTED_REGIONS_TG_CHANNEL_ID[reg],
+              text: `Time to BeReal!`,
+            }),
+          });
+        }
       }
     }
     latest = newLatest;

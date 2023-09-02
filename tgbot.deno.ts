@@ -2,6 +2,14 @@ const TOKEN = Deno.env.get("TG_BOT_TOKEN");
 const TG_CHANNEL_ID = Deno.env.get("TG_CHANNEL_ID");
 const DOMAIN = Deno.env.get("DOMAIN");
 const API_KEY = Deno.env.get("API_KEY");
+
+const REGIONAL_CHANNEL_IDS = new Map(
+  ["us-central", "europe-west", "asia-west", "asia-east"].map((reg) => [
+    reg,
+    Deno.env.get("TG_CHANNEL_ID_" + reg),
+  ])
+);
+
 export const webhookPath = "/tg-webhook";
 
 function genRandomToken(bytes: number) {
@@ -20,6 +28,11 @@ export async function init() {
     throw new Error(
       "TG_BOT_TOKEN, TG_CHANNEL_ID, DOMAIN or API_KEY is not set"
     );
+  }
+  for (const [region, id] of REGIONAL_CHANNEL_IDS.entries()) {
+    if (!id) {
+      throw new Error(`TG_CHANNEL_ID_${region} is not set`);
+    }
   }
 
   await fetch(`https://api.telegram.org/bot${TOKEN}/setWebhook`, {
@@ -62,6 +75,19 @@ async function poll() {
             text: `[${reg}] Time to BeReal!`,
           }),
         });
+        const regionalChannel = REGIONAL_CHANNEL_IDS.get(reg);
+        if (regionalChannel) {
+          await fetch(`https://api.telegram.org/bot${TOKEN}/sendMessage`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              chat_id: regionalChannel,
+              text: `Time to BeReal!`,
+            }),
+          });
+        }
       }
     }
     latest = newLatest;

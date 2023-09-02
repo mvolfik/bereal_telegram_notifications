@@ -6,7 +6,7 @@ const API_KEY = Deno.env.get("API_KEY");
 const REGIONAL_CHANNEL_IDS = new Map(
   ["us-central", "europe-west", "asia-west", "asia-east"].map((reg) => [
     reg,
-    Deno.env.get("TG_CHANNEL_ID_" + reg),
+    Deno.env.get("TG_CHANNEL_ID_" + reg.replace("-", "_")),
   ])
 );
 
@@ -31,7 +31,7 @@ export async function init() {
   }
   for (const [region, id] of REGIONAL_CHANNEL_IDS.entries()) {
     if (!id) {
-      throw new Error(`TG_CHANNEL_ID_${region} is not set`);
+      throw new Error(`TG_CHANNEL_ID_${region} is not set: ${id}`);
     }
   }
 
